@@ -13,6 +13,7 @@ import { Ring } from './components/ui';
 import { hlLine } from './lib/highlight';
 
 const HERO = [
+  '// made by Gio',
   '#include <stdio.h>',
   '',
   'int main() {',

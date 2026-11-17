@@ -96,7 +96,7 @@ h1, h2, h3 { margin: 0; letter-spacing: -0.02em; line-height: 1.15; }
 .brand h1 { font-size: 27px; font-weight: 800; }
 .brand p { margin: 0; color: var(--mut); font-size: 13.5px; font-family: var(--mono); }
 .hero-code { background: #0b0f18; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; margin: 16px 0 12px; box-shadow: var(--shadow); }
-.hero-code .code { border: 0; border-radius: 0; min-height: 232px; background: transparent; }
+.hero-code .code { border: 0; border-radius: 0; min-height: 252px; background: transparent; }
 .hero-out { font: 12.5px/1.5 var(--mono); padding: 9px 14px; border-top: 1px solid var(--line); color: var(--acc); opacity: 0; transform: translateY(4px); transition: .5s; }
 .hero-out.show { opacity: 1; transform: none; }
 .tabs { display: flex; align-items: stretch; background: var(--panel); border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
