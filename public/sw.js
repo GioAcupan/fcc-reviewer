@@ -1,11 +1,23 @@
-// C Hero service worker: network-first for pages, cache-first for hashed assets. Works offline after first visit.
-const CACHE = 'chero-v1';
-const CORE = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png'];
+// C Hero service worker.
+// The build stamps VERSION and PRECACHE (see vite.config.ts), so every deploy gets its own cache:
+// the whole app is cached on install, older deploys' caches are deleted on activate,
+// pages are network-first (online = always newest) with the latest app shell as the offline fallback.
+const VERSION = /*__VERSION__*/'dev';
+const PRECACHE = /*__PRECACHE__*/[];
+const CACHE = 'chero-' + VERSION;
+const SHELL = '/';
+const CORE = [SHELL, '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png'];
+const LOOKUP = { ignoreVary: true };
 
 self.addEventListener('install', (e) => {
-  self.skipWaiting();
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).catch(() => {}));
+  e.waitUntil((async () => {
+    const c = await caches.open(CACHE);
+    // one by one: a single missing file must not block offline support for everything else
+    await Promise.all([...new Set([...CORE, ...PRECACHE])].map((u) => c.add(new Request(u, { cache: 'reload' })).catch(() => {})));
+    await self.skipWaiting();
+  })());
 });
+
 self.addEventListener('activate', (e) => {
   e.waitUntil((async () => {
     const keys = await caches.keys();
@@ -13,32 +25,32 @@ self.addEventListener('activate', (e) => {
     await self.clients.claim();
   })());
 });
-self.addEventListener('message', (e) => {
-  if (e.data && e.data.type === 'precache' && Array.isArray(e.data.urls)) {
-    caches.open(CACHE).then((c) => Promise.all(e.data.urls.map((u) => c.add(u).catch(() => {}))));
-  }
-});
+
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;
-  const isAsset = url.pathname.startsWith('/assets/');
+
+  if (req.mode === 'navigate') {
+    e.respondWith((async () => {
+      try {
+        const res = await fetch(req);
+        if (res.ok) (await caches.open(CACHE)).put(SHELL, res.clone()); // keep the offline shell current
+        return res;
+      } catch {
+        return (await caches.match(SHELL, LOOKUP)) || Response.error();
+      }
+    })());
+    return;
+  }
+
+  // hashed assets, icons, manifest: cache-first, then network (remembering new assets)
   e.respondWith((async () => {
-    const cache = await caches.open(CACHE);
-    if (isAsset) {
-      const hit = await cache.match(req);
-      if (hit) return hit;
-      const res = await fetch(req);
-      if (res.ok) cache.put(req, res.clone());
-      return res;
-    }
-    try {
-      const res = await fetch(req);
-      if (res.ok) cache.put(req, res.clone());
-      return res;
-    } catch {
-      return (await cache.match(req)) || (req.mode === 'navigate' ? await cache.match('/index.html') : undefined) || Response.error();
-    }
+    const hit = await caches.match(req, LOOKUP);
+    if (hit) return hit;
+    const res = await fetch(req);
+    if (res.ok && url.pathname.startsWith('/assets/')) (await caches.open(CACHE)).put(req, res.clone());
+    return res;
   })());
 });
