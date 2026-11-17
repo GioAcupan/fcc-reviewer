@@ -43,4 +43,20 @@ for (const l of LESSONS) {
   });
 }
 for (const ch of CHALLENGES) check(`challenge ${ch.id} ${ch.title}`, ch.solution, ch.tests);
+
+// The trapezoidal-prism exam question must REJECT the classic wrong derivations
+const tp = LESSONS.find(l => l.id === 'exam')!.steps.find(s => s.t === 'code' && s.figure === 'trapprism') as any;
+const mistakes: Record<string, (src: string) => string> = {
+  'forgot /2 on the overhang': s => s.replace('((b - a) / 2) * ((b - a) / 2)', '(b - a) * (b - a)'),
+  'used h as the slanted side': s => s.replace(/s = sqrt\(.*\);/, 's = h;'),
+  'counted only one trapezoid': s => s.replace('sa = 2 * trap', 'sa = trap'),
+  'left out the bottom face': s => s.replace('(a + b + 2 * s) * L', '(a + 2 * s) * L'),
+};
+for (const [name, mutate] of Object.entries(mistakes)) {
+  const src = mutate(tp.solution);
+  if (src === tp.solution) { bad++; console.log(`✗ trapprism mistake "${name}": mutation did not apply`); continue; }
+  const g = gradeAll(src, tp.tests);
+  if (g.pass) { bad++; console.log(`✗ trapprism tests ACCEPT the mistake "${name}"`); }
+  else { ok++; console.log(`  ✓ trapprism rejects "${name}" (${g.results.filter(r => !r.ok).length}/${g.results.length} tests fail)`); }
+}
 console.log(`\n${ok} ok, ${bad} problems`);

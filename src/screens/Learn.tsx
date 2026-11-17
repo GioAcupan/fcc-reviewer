@@ -10,7 +10,7 @@ import { Flowchart, SHAPE_NAMES } from '../components/Flowchart';
 import { Tracer, traceCode } from '../components/Tracer';
 import { Editor, EditorApi, KeyBar } from '../components/Editor';
 import { Console, DiagList, useRunner } from '../components/Console';
-import { ShapeLab } from '../components/ShapeLab';
+import { ShapeLab, ShapeFigure } from '../components/ShapeLab';
 import { compile } from '../engine/interp';
 import { buildFlow } from '../engine/flow';
 import { gradeAll, TestResult } from '../lib/grade';
@@ -355,8 +355,8 @@ export function CodeTask({ starter, tests, hints, solution, blueprint, paper, st
 function CodeStep({ step, done, sk }: SP<'code'> & { sk: string }) {
   const passed = useRef(false);
   return (
-    <CodeTask starter={step.starter} tests={step.tests} hints={step.hints} solution={step.solution} blueprint={step.blueprint} paper={step.paper} storeKey={sk}
-      body={<Md text={step.body} />}
+    <CodeTask starter={step.starter} tests={step.tests} hints={step.hints} solution={step.solution} blueprint={step.blueprint} paper={step.paper} storeKey={step.draftKey ?? sk}
+      body={<><Md text={step.body} />{step.figure && <ShapeFigure shape={step.figure} />}</>}
       onPass={m => { if (m.fails === -1) done(true); else passed.current = true; }} />
   );
 }

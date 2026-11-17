@@ -1475,20 +1475,29 @@ Your checklist:
 8. ~return 0;~ and the closing ~}~`,
       },
       {
-        t: 'code', title: 'Exam Q1: the capsule', paper: true, starter: '',
-        body: 'A **capsule** is a cylinder of radius ~r~ and height ~h~ with a **hemisphere on each end**. Input r and h; display the total surface area (2 decimals). Use PI = 3.14159.',
-        tests: [{ input: '1 2\n', nums: [25.13] }, { input: '2 5\n', nums: [113.1] }, { input: '3 1\n', nums: [131.95] }],
-        hints: ['Two hemispheres = one full sphere: 4πr²', 'Plus the cylinder side 2πrh. The flat circles are glued — not counted.', 'total = 4 * PI * r * r + 2 * PI * r * h;'],
+        t: 'code', title: 'Exam Q1: the trapezoidal prism', paper: true, starter: '', figure: 'trapprism', draftKey: 'exam-trapprism',
+        body: 'A **trapezoidal prism** (figure below): its front and back faces are **isosceles trapezoids** with parallel sides **a** (top) and **b** (bottom) and height **h**, and the prism is **L** long. Input a, b, h and L (in that order) and display the total surface area with 2 decimals.\n\n**No formula given**: derive it with the Face Method.',
+        tests: [
+          { input: '4 10 4 10\n', nums: [296] }, { input: '6 12 4 5\n', nums: [212] }, { input: '3 5 2 7\n', nums: [103.3] },
+          { input: '5 5 3 4\n', nums: [94] }, { input: '2.5 6.5 1.5 8\n', nums: [125.5] },
+        ],
+        hints: [
+          'Count the faces: 2 trapezoids (front and back) + 4 rectangles (top, bottom, and the two slanted sides).',
+          'The slanted side s is NOT given. It is the hypotenuse of a right triangle whose legs are h and the overhang (b − a) / 2.',
+          'SA = 2 × ½(a + b)h + (a + b + 2s) × L',
+        ],
         solution: C`
 #include <stdio.h>
-#define PI 3.14159
+#include <math.h>
 
 int main() {
-    double r, h, total;
-    printf("Enter r and h: ");
-    scanf("%lf %lf", &r, &h);
-    total = 4 * PI * r * r + 2 * PI * r * h;
-    printf("Total surface area = %.2f\n", total);
+    double a, b, h, L, s, trap, sa;
+    printf("Enter a, b, h, L: ");
+    scanf("%lf %lf %lf %lf", &a, &b, &h, &L);
+    s = sqrt(h * h + ((b - a) / 2) * ((b - a) / 2));
+    trap = 0.5 * (a + b) * h;
+    sa = 2 * trap + (a + b + 2 * s) * L;
+    printf("Total surface area = %.2f\n", sa);
     return 0;
 }
 `,

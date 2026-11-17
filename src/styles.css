@@ -603,3 +603,9 @@ code, pre, .code, .cm-content, .kb, .tile, .blank, .oline, .ftext, .sl-formula, 
 .page-h.row { flex-wrap: wrap; }
 .pg-tools { display: flex; align-items: center; gap: 8px; }
 .pg-tools .btn.small { padding: 8px 11px; font-size: 13px; }
+
+/* clue figure (exam) */
+.shape-fig { margin: 10px 0 4px; }
+.shape-fig .sl-svg { max-height: 260px; }
+.shape-fig figcaption { font: 11.5px var(--mono); color: var(--mut); text-align: center; margin-top: 6px; }
+.fig-face { fill: var(--fc); fill-opacity: .12; pointer-events: none; }

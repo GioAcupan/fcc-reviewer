@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Code, buzz } from './ui';
 
-interface Face { id: string; name: string; area: string; c: string; d: string; color: string; trap?: string }
+interface Face { id: string; name: string; area: string; c: string; d: string; color: string; trap?: string; back?: boolean }
 interface Dim { x1: number; y1: number; x2: number; y2: number; t: string; tx: number; ty: number; dash?: boolean }
 interface ShapeDef {
   title: string; given: string; outline: { d: string; dash?: boolean }[]; faces: Face[]; dims: Dim[];
   hidden: { name: string; formula: string; c: string; tri: string; why: string }; code: string;
+  vb?: string; // optional tighter viewBox
 }
 
 const ELL = (cx: number, cy: number, rx: number, ry: number) => `M${cx - rx},${cy} A${rx},${ry} 0 1 0 ${cx + rx},${cy} A${rx},${ry} 0 1 0 ${cx - rx},${cy} Z`;
@@ -69,7 +70,51 @@ export const SHAPES: Record<string, ShapeDef> = {
     hidden: { name: 'slant ℓ of the cone', formula: 'ℓ = √(r² + c²)', c: 'l = sqrt(r * r + c * c);', tri: 'M130,20 L130,100 L200,100 Z', why: 'The cone formula πrℓ needs the slant ℓ, not the height c. Radius r and height c are the legs of a right triangle — ℓ is its hypotenuse.' },
     code: `l = sqrt(r * r + c * c);\ncone = PI * r * l;\ncyl = 2 * PI * r * H;\nbottom = PI * r * r;\ntotal = cone + cyl + bottom;`,
   },
+  trapprism: {
+    title: 'Trapezoidal prism (isosceles base)', given: 'Given: top a, bottom b, height h, length L', vb: '14 56 246 170',
+    outline: [
+      { d: 'M30,190 L170,190 L130,120 L70,120 Z' },
+      { d: 'M70,120 L140,70 L200,70 L240,140 L170,190 M130,120 L200,70' },
+      { d: 'M30,190 L100,140 L240,140 M100,140 L140,70', dash: true },
+    ],
+    faces: [
+      { id: 'front', name: 'Front trapezoid', area: '½(a + b)h', c: '0.5 * (a + b) * h', d: 'M30,190 L170,190 L130,120 L70,120 Z', color: '#6bdfff' },
+      { id: 'back', name: 'Back trapezoid', area: '½(a + b)h', c: '0.5 * (a + b) * h', d: 'M100,140 L240,140 L200,70 L140,70 Z', color: '#79a8ff', back: true },
+      { id: 'top', name: 'Top rectangle', area: 'a·L', c: 'a * L', d: 'M70,120 L130,120 L200,70 L140,70 Z', color: '#ffb86b' },
+      { id: 'bottom', name: 'Bottom rectangle', area: 'b·L', c: 'b * L', d: 'M30,190 L170,190 L240,140 L100,140 Z', color: '#9ef0a3', back: true },
+      { id: 'right', name: 'Right slanted rectangle', area: 's·L', c: 's * L', d: 'M130,120 L170,190 L240,140 L200,70 Z', color: '#ff7ab2' },
+      { id: 'left', name: 'Left slanted rectangle', area: 's·L', c: 's * L', d: 'M30,190 L70,120 L140,70 L100,140 Z', color: '#c792ea', back: true },
+    ],
+    dims: [
+      { x1: 30, y1: 203, x2: 170, y2: 203, t: 'b', tx: 96, ty: 218 },
+      { x1: 70, y1: 111, x2: 130, y2: 111, t: 'a', tx: 96, ty: 106 },
+      { x1: 100, y1: 120, x2: 100, y2: 190, t: 'h', tx: 106, ty: 161, dash: true },
+      { x1: 176, y1: 196, x2: 246, y2: 146, t: 'L', tx: 216, ty: 184 },
+    ],
+    hidden: { name: 'slanted side s', formula: 's = √(h² + ((b − a)/2)²)', c: 's = sqrt(h * h + ((b - a) / 2) * ((b - a) / 2));', tri: 'M130,120 L130,190 L170,190 Z', why: 'The slanted rectangles are s × L, but s is not given. The overhang (b − a)/2 and the height h are the legs of a right triangle with s as the hypotenuse.' },
+    code: `s = sqrt(h * h + ((b - a) / 2) * ((b - a) / 2));\ntrapezoids = 2 * (0.5 * (a + b) * h);\nrects = (a + b + 2 * s) * L;\ntotal = trapezoids + rects;`,
+  },
 };
+
+/** Static clue figure: the solid with only its GIVEN dimensions labeled. No formulas, no hidden-length hints. */
+export function ShapeFigure({ shape }: { shape: string }) {
+  const S = SHAPES[shape];
+  return (
+    <figure className="shape-fig">
+      <svg viewBox={S.vb ?? '0 0 260 225'} className="sl-svg" role="img" aria-label={`${S.title}. ${S.given}.`}>
+        {S.faces.filter(f => !f.back && !f.trap).map(f => <path key={f.id} d={f.d} className="fig-face" style={{ ['--fc' as any]: f.color }} />)}
+        {S.outline.map((o, i) => <path key={i} d={o.d} className={`sl-line ${o.dash ? 'dash' : ''}`} />)}
+        {S.dims.map((d, i) => (
+          <g key={i} className="sl-dim">
+            <line x1={d.x1} y1={d.y1} x2={d.x2} y2={d.y2} strokeDasharray={d.dash ? '4 3' : undefined} />
+            <text x={d.tx} y={d.ty}>{d.t}</text>
+          </g>
+        ))}
+      </svg>
+      <figcaption>{S.title} · {S.given} · not to scale</figcaption>
+    </figure>
+  );
+}
 
 export function ShapeLab({ shape, onComplete }: { shape: string; onComplete?: () => void }) {
   const S = SHAPES[shape];
@@ -89,7 +134,7 @@ export function ShapeLab({ shape, onComplete }: { shape: string; onComplete?: ()
   return (
     <div className="shapelab">
       <div className="sl-head"><b>{S.title}</b><span>{S.given}</span></div>
-      <svg viewBox="0 0 260 225" className="sl-svg" role="img" aria-label={S.title}>
+      <svg viewBox={S.vb ?? '0 0 260 225'} className="sl-svg" role="img" aria-label={S.title}>
         {S.faces.map(f => (
           <path key={f.id} d={f.d} className={`sl-face ${sel.includes(f.id) ? 'on' : ''} ${f.trap ? 'trap' : ''}`} style={{ ['--fc' as any]: f.color }} onClick={() => toggle(f)} />
         ))}
