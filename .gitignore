@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.playwright-mcp/
+.vercel/
+*.log
+.DS_Store
+# course material stays local (not ours to publish)
+references/
