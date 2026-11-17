@@ -3,7 +3,7 @@ import { EditorState, StateEffect, StateField, RangeSetBuilder, Compartment } fr
 import { EditorView, keymap, lineNumbers, highlightActiveLine, drawSelection, Decoration, DecorationSet } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap, indentWithTab, undo, redo } from '@codemirror/commands';
 import { cpp } from '@codemirror/lang-cpp';
-import { syntaxHighlighting, HighlightStyle, indentOnInput, bracketMatching } from '@codemirror/language';
+import { syntaxHighlighting, HighlightStyle, indentOnInput, bracketMatching, indentUnit } from '@codemirror/language';
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { tags as t } from '@lezer/highlight';
 
@@ -70,6 +70,7 @@ export function Editor({ value, onChange, marks: mk, plain, apiRef, minH = 220, 
         doc: value,
         extensions: [
           lineNumbers(), history(), drawSelection(), indentOnInput(), bracketMatching(), highlightActiveLine(),
+          indentUnit.of('    '), EditorState.tabSize.of(4), // 4-space indents, matching the boilerplate's `return 0;`
           lang.current.of(plain ? [] : [closeBrackets(), cpp(), syntaxHighlighting(style)]),
           keymap.of([...closeBracketsKeymap, ...defaultKeymap, ...historyKeymap, indentWithTab]),
           EditorView.lineWrapping, theme, marks,
@@ -82,7 +83,14 @@ export function Editor({ value, onChange, marks: mk, plain, apiRef, minH = 220, 
     if (apiRef) apiRef.current = {
       insert(text, back = 0) {
         const { from, to } = v.state.selection.main;
-        v.dispatch({ changes: { from, to, insert: text }, selection: { anchor: from + text.length - back }, scrollIntoView: true });
+        let pos = text.length - back; // cursor position inside the inserted text
+        // multi-line snippets: indent every new line to match the line we're typing on
+        const indent = /^[ \t]*/.exec(v.state.doc.lineAt(from).text)![0];
+        if (indent && text.includes('\n')) {
+          pos += (text.slice(0, pos).split('\n').length - 1) * indent.length;
+          text = text.replace(/\n/g, '\n' + indent);
+        }
+        v.dispatch({ changes: { from, to, insert: text }, selection: { anchor: from + pos }, scrollIntoView: true });
         v.focus();
       },
       goto(line) {

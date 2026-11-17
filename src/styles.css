@@ -598,3 +598,8 @@ code, pre, .code, .cm-content, .kb, .tile, .blank, .oline, .ftext, .sl-formula, 
 .sort-chip { font: 11.5px var(--mono); padding: 3px 8px; border-radius: 8px; background: rgba(94, 241, 164, .07); border: 1px solid rgba(94, 241, 164, .28); color: var(--fg2); animation: pop .3s; }
 .sort-chip b { color: var(--ok); font-weight: 600; }
 .sort-cat small { display: block; font: 500 10.5px var(--mono); color: var(--mut); margin-top: 1px; }
+
+/* playground header tools */
+.page-h.row { flex-wrap: wrap; }
+.pg-tools { display: flex; align-items: center; gap: 8px; }
+.pg-tools .btn.small { padding: 8px 11px; font-size: 13px; }

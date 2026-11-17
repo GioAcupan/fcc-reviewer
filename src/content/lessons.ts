@@ -627,16 +627,7 @@ printf("Price: %[[.2f|f]]\n", price);
       },
       {
         t: 'code', title: 'Rectangle report',
-        starter: C`
-#include <stdio.h>
-
-int main() {
-    int length = 7, width = 3;
-    int area;
-
-    return 0;
-}
-`,
+        starter: ['#include <stdio.h>', '', 'int main() {', '    int length = 7, width = 3;', '    int area;', '    ', '    return 0;', '}', ''].join('\n'),
         body: 'Compute the area of the rectangle into the variable ~area~, then print it like: ~Area = 21~',
         tests: [{ input: '', nums: [21], has: ['Area'] }],
         hints: ['area = length * width;', 'printf("Area = %d\\n", area);'],

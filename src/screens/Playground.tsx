@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Play, Workflow, Activity, FileCode2 } from 'lucide-react';
+import { Play, Workflow, Activity, FileCode2, FilePlus2 } from 'lucide-react';
 import { Editor, EditorApi, KeyBar } from '../components/Editor';
 import { Console, useRunner } from '../components/Console';
 import { Flowchart } from '../components/Flowchart';
@@ -7,7 +7,7 @@ import { Tracer } from '../components/Tracer';
 import { compile } from '../engine/interp';
 import { buildFlow, Flow } from '../engine/flow';
 import { getProgress, update } from '../lib/store';
-import { C } from '../content/types';
+import { C, STARTER, STARTER_MATH } from '../content/types';
 import { P11, P6 } from '../content/lessons';
 
 const EXAMPLES: { name: string; code: string }[] = [
@@ -83,8 +83,15 @@ int main() {
 ` },
 ];
 
+const TEMPLATES: { name: string; code: string }[] = [
+  { name: 'Blank program', code: STARTER },
+  { name: 'Blank + math.h', code: STARTER_MATH },
+];
+// the empty, indented line inside main() where you start typing
+const bodyLine = (src: string) => src.split('\n').findIndex((l, i, a) => i > 0 && /^\s+$/.test(l) && /main\s*\(/.test(a[i - 1])) + 1;
+
 export function Playground() {
-  const [code, setCode] = useState(() => getProgress().playground || EXAMPLES[1].code);
+  const [code, setCode] = useState(() => getProgress().playground || STARTER);
   const [tab, setTab] = useState<'term' | 'flow' | 'trace'>('term');
   const api = useRef<EditorApi | null>(null);
   const runner = useRunner();
@@ -103,16 +110,29 @@ export function Playground() {
   }, [code]);
   const traceData = useMemo(() => (runner.st.phase === 'done' && runner.st.compiled?.ok && runner.st.result ? { compiled: runner.st.compiled, result: runner.st.result } : null), [runner.st]);
   const run = () => { setTab('term'); runner.start(code); };
+  const load = (name: string, src: string, template: boolean) => {
+    const untouched = !code.trim() || [...TEMPLATES, ...EXAMPLES].some(x => x.code === code);
+    if (!untouched && !confirm(template ? 'Start a new file? Your current code will be replaced (↶ undo brings it back).' : `Replace your code with “${name}”? (↶ undo brings it back)`)) return;
+    setCode(src); api.current?.set(src); runner.reset(); setTab('term');
+    if (template) setTimeout(() => api.current?.goto(bodyLine(src)), 0); // cursor on the empty line inside main()
+  };
   return (
     <div className="page play">
       <header className="page-h row">
         <h2>Playground</h2>
-        <label className="ex-pick"><FileCode2 size={15} />
-          <select value="" onChange={e => { const ex = EXAMPLES[+e.target.value]; if (ex && (code === ex.code || confirm(`Replace your code with “${ex.name}”?`))) { setCode(ex.code); api.current?.set(ex.code); runner.reset(); } }} aria-label="Load an example">
-            <option value="">examples…</option>
-            {EXAMPLES.map((e, i) => <option key={i} value={i}>{e.name}</option>)}
-          </select>
-        </label>
+        <div className="pg-tools">
+          <button className="btn small" onClick={() => load('Blank program', STARTER, true)} aria-label="New file from the boilerplate template"><FilePlus2 size={14} /> New</button>
+          <label className="ex-pick"><FileCode2 size={15} />
+            <select value="" aria-label="Load a template or an example" onChange={e => {
+              const [kind, i] = e.target.value.split(':'); const it = (kind === 't' ? TEMPLATES : EXAMPLES)[+i];
+              if (it) load(it.name, it.code, kind === 't');
+            }}>
+              <option value="">templates…</option>
+              <optgroup label="Templates">{TEMPLATES.map((t, i) => <option key={'t' + i} value={`t:${i}`}>{t.name}</option>)}</optgroup>
+              <optgroup label="Examples">{EXAMPLES.map((x, i) => <option key={'x' + i} value={`x:${i}`}>{x.name}</option>)}</optgroup>
+            </select>
+          </label>
+        </div>
       </header>
       <div className="card ed">
         <div className="tabs"><span className="tab on">main.c</span><span className={`live-dot ${live.err ? 'bad' : 'ok'}`} title={live.err ?? 'compiles'}>{live.err ? '✗ ' + live.err.slice(0, 38) : '● compiles'}</span></div>

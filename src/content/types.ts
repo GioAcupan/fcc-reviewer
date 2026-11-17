@@ -21,21 +21,8 @@ export interface Challenge {
 }
 
 export const C = (s: TemplateStringsArray, ...v: unknown[]) => String.raw(s, ...v).replace(/^\n/, '');
-export const STARTER = C`
-#include <stdio.h>
-
-int main() {
-
-    return 0;
-}
-`;
-export const STARTER_MATH = C`
-#include <stdio.h>
-#include <math.h>
-#define PI 3.14159
-
-int main() {
-
-    return 0;
-}
-`;
+// Built from explicit strings: the empty body line must keep its 4-space indent
+// (trailing spaces inside template literals get stripped by editors/formatters).
+const IND = '    ';
+export const STARTER = ['#include <stdio.h>', '', 'int main() {', IND, IND + 'return 0;', '}', ''].join('\n');
+export const STARTER_MATH = ['#include <stdio.h>', '#include <math.h>', '#define PI 3.14159', '', 'int main() {', IND, IND + 'return 0;', '}', ''].join('\n');
