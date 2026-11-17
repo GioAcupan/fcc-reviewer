@@ -9,6 +9,7 @@ export interface Progress {
   cards: Record<string, CardState>;
   playground: string;
   name?: string;
+  lastLesson?: string;
 }
 const KEY = 'chero-progress-v1';
 const fresh = (): Progress => ({ lessons: {}, challenges: {}, xp: 0, streak: { last: '', count: 0 }, cards: {}, playground: '' });

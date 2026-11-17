@@ -329,6 +329,7 @@ export function LessonPlayer({ id }: { id: string }) {
   const [i, setI] = useState(() => { const s = getProgress().lessons[id]; return s && !s.done ? Math.min(s.step, (lesson?.steps.length ?? 1) - 1) : 0; });
   const [gained, setGained] = useState(0);
   const [finished, setFinished] = useState(false);
+  useEffect(() => { if (lesson && getProgress().lastLesson !== id) update(p => { p.lastLesson = id; }); }, [id, lesson]);
   if (!lesson) return <div className="page"><p>Lesson not found.</p><button className="btn" onClick={() => go('/learn')}>Back</button></div>;
   const step = lesson.steps[i];
   const next = (firstTry = true) => {

@@ -2,8 +2,9 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 import { BookOpen, Code2, Home as HomeIcon, Swords, Terminal } from 'lucide-react';
 import { useRoute, go } from './lib/router';
-import { useProgress } from './lib/store';
+import { useProgress, Progress } from './lib/store';
 import { LESSONS } from './content/lessons';
+import type { Lesson } from './content/types';
 import { CHALLENGES } from './content/challenges';
 import { CourseMap, LessonPlayer } from './screens/Learn';
 import { LevelSelect, ChallengePlay } from './screens/Challenges';
@@ -50,10 +51,21 @@ function Typer() {
   );
 }
 
+// Home card target: the lesson you last opened (if unfinished), else the next unfinished one after it.
+function resumeTarget(p: Progress): { lesson: Lesson; label: string } {
+  const unfinished = (l: Lesson) => !p.lessons[l.id]?.done;
+  const last = LESSONS.find(l => l.id === p.lastLesson);
+  if (last && unfinished(last)) return { lesson: last, label: 'continue →' };
+  const nxt = LESSONS.slice(last ? LESSONS.indexOf(last) + 1 : 0).find(unfinished) ?? LESSONS.find(unfinished);
+  if (!nxt) return { lesson: last ?? LESSONS[LESSONS.length - 1], label: 'review →' };
+  if ((p.lessons[nxt.id]?.step ?? 0) > 0) return { lesson: nxt, label: 'continue →' };
+  return { lesson: nxt, label: last || Object.keys(p.lessons).length ? 'up next →' : 'start here →' };
+}
+
 function Home() {
   const p = useProgress();
   const done = LESSONS.filter(l => p.lessons[l.id]?.done).length;
-  const next = LESSONS.find(l => !p.lessons[l.id]?.done) ?? LESSONS[LESSONS.length - 1];
+  const { lesson: next, label } = resumeTarget(p);
   const stars = Object.values(p.challenges).reduce((a, c) => a + (c.stars || 0), 0);
   const solved = Object.values(p.challenges).filter(c => c.solved).length;
   const modes = [
@@ -73,7 +85,7 @@ function Home() {
         <div className="stat"><div className="big">{stars}<small>★</small></div><span>{solved}/{CHALLENGES.length} levels</span></div>
       </div>
       <button className="continue" onClick={() => go('/learn/' + next.id)}>
-        <span className="mut">{done === 0 ? 'start here →' : done === LESSONS.length ? 'review →' : 'continue →'}</span>
+        <span className="mut">{label}</span>
         <b>{next.title}</b>
         <span className="sub">{next.sub}</span>
         <span className="cont-bar"><span style={{ width: `${((p.lessons[next.id]?.step ?? 0) / next.steps.length) * 100}%` }} /></span>
