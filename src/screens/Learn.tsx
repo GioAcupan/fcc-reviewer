@@ -59,7 +59,7 @@ export function CourseMap() {
 }
 
 // ───────────── shared bits ─────────────
-const XP: Record<Step['t'], number> = { read: 5, link: 5, trace: 5, quiz: 10, fill: 10, order: 10, shape: 15, code: 25 };
+const XP: Record<Step['t'], number> = { read: 5, link: 5, trace: 5, quiz: 10, fill: 10, order: 10, sort: 10, shape: 15, code: 25 };
 const shuffle = <T,>(a: T[]) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 
 function LinkedView({ code, big }: { code: string; big?: boolean }) {
@@ -224,6 +224,48 @@ function OrderStep({ step, done }: SP<'order'>) {
   );
 }
 
+const catName = (c: string) => c.split('|')[0]; // "text|char *" → main label + small subtitle
+function SortStep({ step, done }: SP<'sort'>) {
+  const [k, setK] = useState(0);
+  const kRef = useRef(0); // source of truth for fast double-taps
+  const [wrong, setWrong] = useState<number | null>(null);
+  const [misses, setMisses] = useState(0);
+  const item = step.items[k];
+  const finished = k >= step.items.length;
+  const lockUntil = useRef(0); // ignore the 2nd tap of a double-tap while the next card slides in
+  const pick = (c: number) => {
+    const cur = kRef.current;
+    if (cur >= step.items.length || performance.now() < lockUntil.current) return;
+    if (c === step.items[cur].a) { kRef.current = cur + 1; lockUntil.current = performance.now() + 250; buzz(8); setWrong(null); setK(cur + 1); }
+    else { buzz([30, 50, 30]); setWrong(c); setMisses(m => m + 1); }
+  };
+  return (
+    <>
+      <Md text={step.body} />
+      <div className="sorter">
+        <div className="sort-progress"><span style={{ width: `${(k / step.items.length) * 100}%` }} /><b>{k}/{step.items.length}</b></div>
+        {!finished ? (
+          <div key={`${k}-${misses}`} className={`sort-card ${wrong !== null ? 'shake' : ''}`}>
+            <Md text={item.t} />
+            {wrong !== null && <div className="sort-why">Not {catName(step.cats[wrong])}.{item.why ? ' ' + item.why : ' Try another box.'}</div>}
+          </div>
+        ) : (
+          <div className="sort-card done"><Md text={misses === 0 ? '**Perfect sort!** Every value in the right box.' : `**All sorted** with ${misses} slip${misses > 1 ? 's' : ''}.`} /></div>
+        )}
+        <div className="sort-cats">
+          {step.cats.map((c, i) => <button key={i} className={`sort-cat ${wrong === i ? 'wrong' : ''}`} disabled={finished} onClick={() => pick(i)}>{catName(c)}{c.includes('|') && <small>{c.split('|')[1]}</small>}</button>)}
+        </div>
+        {k > 0 && (
+          <div className="sort-done">
+            {step.items.slice(0, k).map((it, i) => <span key={i} className="sort-chip">{it.t.replace(/~/g, '')} <b>→ {catName(step.cats[it.a])}</b></span>)}
+          </div>
+        )}
+      </div>
+      <ActionBar state={finished ? 'ok' : 'idle'} disabled label="Sort every value first" onContinue={() => done(misses === 0)} title={misses === 0 ? 'Perfect sort!' : 'All sorted!'} />
+    </>
+  );
+}
+
 function ShapeStep({ step, done }: SP<'shape'>) {
   const [ok, setOk] = useState(false);
   return (
@@ -328,11 +370,12 @@ function StepView({ step, done, sk }: { step: Step; done: (ft?: boolean) => void
     case 'fill': return <FillStep step={step} done={done} />;
     case 'order': return <OrderStep step={step} done={done} />;
     case 'shape': return <ShapeStep step={step} done={done} />;
+    case 'sort': return <SortStep step={step} done={done} />;
     case 'code': return <CodeStep step={step} done={done} sk={sk} />;
   }
 }
 
-const KIND: Record<Step['t'], string> = { read: 'concept', link: 'explore', trace: 'watch it run', quiz: 'quiz', fill: 'fill the blanks', order: 'arrange', shape: 'shape lab', code: 'code it' };
+const KIND: Record<Step['t'], string> = { read: 'concept', link: 'explore', trace: 'watch it run', quiz: 'quiz', fill: 'fill the blanks', order: 'arrange', sort: 'sort it', shape: 'shape lab', code: 'code it' };
 
 export function LessonPlayer({ id }: { id: string }) {
   const lesson = LESSONS.find(l => l.id === id) as Lesson | undefined;

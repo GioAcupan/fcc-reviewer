@@ -8,7 +8,8 @@ export type Step =
   | { t: 'fill'; title: string; body: string; code: string; extra?: string[]; why?: string }
   | { t: 'order'; title: string; body: string; lines: string[]; given?: number; why?: string }
   | { t: 'code'; title: string; body: string; starter: string; tests: import('../lib/grade').TestCase[]; hints: string[]; solution: string; blueprint?: boolean; paper?: boolean }
-  | { t: 'shape'; title: string; body: string; shape: string };
+  | { t: 'shape'; title: string; body: string; shape: string }
+  | { t: 'sort'; title: string; body: string; cats: string[]; items: { t: string; a: number; why?: string }[] };
 
 export interface Lesson { id: string; unit: number; title: string; sub: string; icon: string; boss?: boolean; mini?: boolean; steps: Step[] }
 export interface Unit { n: number; title: string; tag: string; color: string }

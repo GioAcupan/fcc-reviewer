@@ -95,7 +95,7 @@ export function fmtNum(v: number, b: Base) {
   if (b === 'float' || b === 'double') {
     if (!isFinite(v)) return String(v);
     if (Number.isInteger(v) && Math.abs(v) < 1e15) return v.toFixed(1);
-    return String(parseFloat(v.toPrecision(b === 'float' ? 7 : 10)));
+    return String(parseFloat(v.toPrecision(10))); // floats show their true stored value (1.20 → 1.200000048)
   }
   if (b === 'char') return v >= 32 && v < 127 ? `'${String.fromCharCode(v)}'` : v === 10 ? "'\\n'" : v === 0 ? "'\\0'" : String(v);
   return intStr(v);

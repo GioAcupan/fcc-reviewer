@@ -19,7 +19,14 @@ const check = (label: string, code: string, tests: any[]) => {
 for (const l of LESSONS) {
   l.steps.forEach((s, i) => {
     const label = `${l.id}#${i + 1} ${s.title}`;
-    if (s.t === 'code') check(label, s.solution, s.tests);
+    if (s.t === 'code') {
+      check(label, s.solution, s.tests);
+      if (s.starter.trim() && gradeAll(s.starter, s.tests).pass) { bad++; console.log(`✗ ${label}: the starter code already passes`); }
+    }
+    if (s.t === 'sort') {
+      const out = s.items.filter(it => it.a < 0 || it.a >= s.cats.length);
+      if (out.length) { bad++; console.log(`✗ ${label}: sort answers out of range`, out); } else ok++;
+    }
     if (s.t === 'trace' || s.t === 'link' || (s.t === 'read' && s.flow)) {
       const c = compile(s.code!);
       if (!c.ok) { bad++; console.log(`✗ ${label}: trace code does not compile`, c.diags.map(d => d.msg)); return; }

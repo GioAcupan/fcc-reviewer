@@ -28,4 +28,23 @@ console.log(`${snap?.val === '"Cum Laude"' ? '✓' : '✗'} trace shows text: ${
 expectOut('strcpy into char array', 'char h[30]; strcpy(h, "Magna Cum Laude"); printf("%s", h);', '', 'Magna Cum Laude');
 expectError('char = "string" is rejected', 'char h; h = "Summa";', "can't hold a \"string\"");
 expectError('array = "string" is rejected', 'char h[30]; h = "Summa";', 'array type');
+
+// data-types lesson
+function expectWarn(name: string, body: string, msgPart: string) {
+  const c = compile(prog(body));
+  const hit = c.diags.find(d => d.sev === 'warning' && d.msg.includes(msgPart));
+  if (!hit) fails++;
+  console.log(`${hit ? '✓' : '✗'} ${name}: ${hit ? hit.msg : 'missing warning, got ' + JSON.stringify(c.diags.map(d => d.msg))}`);
+}
+expectOut('int overflow wraps around', 'int big = 2147483647; big = big + 1; printf("%d", big);', '', '-2147483648');
+expectOut('long long holds it', 'long long b = 2147483647; b = b + 1; printf("%lld", b);', '', '2147483648');
+expectOut('decimal chopped into int', 'int x = 3.99; printf("%d", x);', '', '3');
+expectOut('char is a small number', "char c = 'A'; c = c + 1; printf(\"%c %d\", c, c);", '', 'B 66');
+expectOut('float stores 1.20 imprecisely', 'float f = 1.20; printf("%.10f", f);', '', '1.2000000477');
+expectOut('%d with a double prints garbage', 'printf("%d", 49.5);', '', '1717986918');
+expectWarn('chop warning on assignment', 'int area; area = 3.14159 * 2 * 2;', 'thrown away');
+expectWarn('chop warning on declaration', 'int x = 3.99;', 'thrown away');
+const fr = expectOut('trace shows a float as stored', 'float f = 1.20; printf("ok");', '', 'ok');
+const fv = fr?.trace.at(-1)?.vars.find(v => v.name === 'f')?.val;
+console.log(`${fv === '1.200000048' ? '✓' : '✗'} float chip shows ${fv}`); if (fv !== '1.200000048') fails++;
 console.log(fails ? `\n${fails} FAILED` : '\nall traps behave like real C');

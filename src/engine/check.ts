@@ -83,6 +83,8 @@ export function check(prog: Program): Diag[] {
   let loopDepth = 0, switchDepth = 0;
   let curFn: N | null = null;
 
+  const art = (t: Ty) => (/^[aeiou]/.test(t.b) ? 'an' : 'a');
+  const chopHint = (v: string) => `Storing a decimal in an int CHOPS it: 3.99 becomes 3 (no rounding). If ${v} should keep decimals, declare it as double. If you really want a whole number, write (int) in front to show you mean it.`;
   const isLval = (e: N): boolean => e.k === 'id' || e.k === 'index' || (e.k === 'unary' && e.op === '*');
   const nm = (e: N) => prog.src.slice(e.s, e.end);
 
@@ -163,6 +165,7 @@ export function check(prog: Program): Diag[] {
         else if (l.a > 0) err(e, `assignment to expression with array type`, 'Arrays can\'t be assigned with =. For text, declare  char *name;  instead, or copy with  strcpy(name, "...");  from <string.h>.');
         if (e.op === '%=' && (isFloat(l) || isFloat(r))) err(e, 'invalid operands to %=', '% only works with integers.');
         if (isFloat(l)) warnIntDiv(e.r);
+        if (isIntTy(l) && isFloat(r)) warn(e, `'${nm(e.l)}' is ${art(l)} ${tyStr(l)}, so the decimal part of ${nm(e.r)} is thrown away`, chopHint(nm(e.l)));
         if (isIntTy(l) && e.r.k === 'str') err(e, `'${nm(e.l)}' is a single ${tyStr(l)} — it can't hold a "string"`, `A ${tyStr(l)} holds ONE value. For text declare  char *${nm(e.l)};  then  ${nm(e.l)} = "...";  (or use a char array + strcpy).`);
         return l;
       }
@@ -262,6 +265,7 @@ export function check(prog: Program): Diag[] {
         T(it.init);
         if (it.init.k === 'str' && ty.a === 0 && ty.p === 0) err(it, `'${it.name}' is a single char but you gave it a "string"`, `Use an array: char ${it.name}[50] = "...";`);
         if (isFloat(ty)) warnIntDiv(it.init);
+        if (isIntTy(ty) && it.init.k !== 'initlist' && isFloat(it.init.ty)) warn(it, `'${it.name}' is ${art(ty)} ${tyStr(ty)}, so the decimal part of ${nm(it.init)} is thrown away`, chopHint(it.name));
         if (ty.a > 0 && it.init.k !== 'initlist' && it.init.k !== 'str') err(it, 'invalid array initializer', 'Use braces: int a[3] = {1, 2, 3};');
       }
       if (isGlobal && it.init && !['num', 'str', 'initlist', 'unary'].includes(it.init.k) && !(it.init.k === 'id' && it.init.builtin)) {

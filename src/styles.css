@@ -577,3 +577,24 @@ code, pre, .code, .cm-content, .kb, .tile, .blank, .oline, .ftext, .sl-formula, 
 .boss-tag { font: 700 10px var(--mono); font-style: normal; color: var(--gold); border: 1px solid rgba(255, 209, 102, .45); background: rgba(255, 209, 102, .08); padding: 0 6px; border-radius: 6px; text-transform: uppercase; letter-spacing: .05em; width: fit-content; }
 .node.mini .ring { box-shadow: 0 6px 0 #070a10, 0 0 0 1px var(--uc), 0 0 24px color-mix(in srgb, var(--uc) 32%, transparent); }
 .node.mini .node-ic { color: var(--gold); font-size: 24px; }
+
+/* type sorter */
+.sorter { display: grid; gap: 12px; margin-top: 6px; }
+.sort-progress { position: relative; height: 18px; border-radius: 9px; background: #06090f; border: 1px solid var(--line2); overflow: hidden; }
+.sort-progress span { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, var(--acc), var(--ty)); transition: width .35s cubic-bezier(.2, .8, .2, 1); }
+.sort-progress b { position: relative; display: block; text-align: center; font: 700 11px/18px var(--mono); text-shadow: 0 1px 2px #000; }
+.sort-card { min-height: 128px; display: grid; place-items: center; align-content: center; gap: 6px; text-align: center; padding: 20px 16px; border-radius: 20px; background: linear-gradient(160deg, #1b2540, var(--panel)); border: 1px solid var(--line2); box-shadow: var(--shadow); animation: rise .25s both; }
+.sort-card.shake { animation: shake .4s; border-color: rgba(255, 107, 129, .5); }
+.sort-card.done { border-color: rgba(94, 241, 164, .45); }
+.sort-card .md p { font-size: 21px; color: var(--fg); margin: 0; line-height: 1.35; }
+.sort-card .md .ic { font-size: 20px; padding: 3px 9px; }
+.sort-why { font-size: 13.5px; color: #ffc2cc; max-width: 34ch; }
+.sort-cats { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; }
+.sort-cat { padding: 13px 6px; border-radius: 13px; background: var(--panel2); border: 1.5px solid var(--line2); font: 700 14px var(--mono); color: var(--ty); box-shadow: 0 3px 0 #070a10; transition: transform .08s, box-shadow .08s; }
+.sort-cat:active:not(:disabled) { transform: translateY(3px); box-shadow: none; }
+.sort-cat:disabled { opacity: .45; }
+.sort-cat.wrong { border-color: var(--err); color: var(--err); animation: shake .4s; }
+.sort-done { display: flex; flex-wrap: wrap; gap: 6px; }
+.sort-chip { font: 11.5px var(--mono); padding: 3px 8px; border-radius: 8px; background: rgba(94, 241, 164, .07); border: 1px solid rgba(94, 241, 164, .28); color: var(--fg2); animation: pop .3s; }
+.sort-chip b { color: var(--ok); font-weight: 600; }
+.sort-cat small { display: block; font: 500 10.5px var(--mono); color: var(--mut); margin-top: 1px; }

@@ -37,7 +37,9 @@ int main() {
 | ~char~ | one character | ~%c~ | ~" %c"~ |
 | ~char s[50]~ | a word | ~%s~ | ~%s~ (no &) |
 
-~%.2f~ = 2 decimals · ~%5d~ = width 5 · ~\\n~ new line · ~\\t~ tab · ~%%~ prints %`,
+~%.2f~ = 2 decimals · ~%5d~ = width 5 · ~\\n~ new line · ~\\t~ tab · ~%%~ prints %
+
+**Box limits:** ~int~ ≈ ±2.1 billion (past that it wraps around; use ~long long~) · ~float~ ≈ 7 digits, ~double~ ≈ 15 (use double) · storing a decimal in an int **chops** it: 3.99 → 3.`,
   },
   {
     id: 'ops', title: 'Operators & precedence', icon: '+−',
@@ -229,4 +231,8 @@ export const CARDS: Card[] = [
   { id: 'c47', f: 'Why does `char h[30]; h = "Summa";` fail?', b: 'Arrays can\'t be assigned with `=`. Use `strcpy(h, "Summa");` or declare `char *h;`' },
   { id: 'c48', f: 'GWA ladder with ≤ checks: which bound goes first?', b: 'The smallest: 1.20 → 1.45 → 1.75. Otherwise everyone stops at the widest check.' },
   { id: 'c49', f: 'Why use double, not float, for a GWA of 1.20?', b: 'float stores 1.2000000477, so `gwa <= 1.20` is false. A double matches the 1.20 in your code.' },
+  { id: 'c50', f: 'About how big can an int get?', b: '≈ 2.1 billion (2,147,483,647). One more wraps around to a negative number, so use `long long` beyond that.' },
+  { id: 'c51', f: '`int x = 3.99;` stores…', b: '**3**: decimals are chopped, not rounded.' },
+  { id: 'c52', f: "`'7'` vs `7` vs `\"7\"`", b: "`'7'` is a char (one symbol), `7` is an int, `\"7\"` is text." },
+  { id: 'c53', f: 'Why does scanf need %lf for a double while printf is fine with %f?', b: 'scanf writes INTO the box, so it needs the exact size (%f = float, %lf = double). printf only reads a copy.' },
 ];

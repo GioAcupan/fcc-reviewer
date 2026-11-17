@@ -2,9 +2,10 @@
 
 A mobile-first PWA that takes Fundamentals of Computing students from flowcharts to writing C on paper.
 
-- **Learn**: 13 lessons in 5 units, building up to the two exam problem types:
+- **Learn**: 15 lessons in 5 units. A data types lesson up front explains the reasons behind the format codes and the type traps, and the course builds up to the exam problem types:
   - *Problem 1 type*: surface area of a solid you have never seen (the "Face Method" plus interactive Shape Labs)
   - *Problem 11 type*: an input guard, then accumulating a series from M to N
+  - *Problem 6 (mini-boss)*: the GWA / Latin honors classifier
 - **Challenges**: 30 levels (10 easy / 10 medium / 10 hard), each with hidden tests, hints and stars.
 - **Reference**: a searchable cheat sheet and 45 spaced-repetition flashcards.
 - **Playground**: write any C, run it with interactive input, see its flowchart update as you type, and replay it step by step.

@@ -369,19 +369,214 @@ int main() {
     ],
   },
   {
-    id: 'vars', unit: 0, title: 'Named Boxes', sub: 'variables, types, = and placeholders', icon: '▣',
+    id: 'types', unit: 0, title: 'Data Types: What Fits in the Box', sub: 'int, double, char, text — and why %d / %lf exist', icon: '⊞',
     steps: [
       {
-        t: 'read', title: 'A variable is a labeled box',
-        body: `A variable is a box with a name that holds **one value**. Before you use a box you must **declare** it: tell C its *type* and *name*.
+        t: 'read', title: 'Every value has a type', code: C`
+int count = 15;          // a whole number
+double radius = 2.75;    // a decimal number
+char grade = 'A';        // ONE character
+char *name = "Juan";     // text (many characters)
+`, anno: { 1: 'type → name → value' },
+        body: `Every value in C has a **type**. Think of it as the *shape* of the box that holds it. The type decides three things:
 
-| Type | Holds | Example |
-| ~int~ | whole numbers | ~int n = 15;~ |
-| ~double~ | decimals | ~double r = 2.5;~ |
-| ~float~ | decimals (less precise) | ~float x = 1.5;~ |
-| ~char~ | one character | ~char g = 'A';~ |
+1. **What fits**: whole numbers, decimals, one character, or text
+2. **How math behaves**: 7 / 2 is 3 for ints but 3.5 for doubles
+3. **Which ~%~ code** printf and scanf need
 
-> Exam tip: for lengths, areas and formulas, always use **double**.`,
+Almost every exam trap is a type mix-up, so let's get the boxes right first.`,
+      },
+      {
+        t: 'sort', title: 'Type sorter', body: 'Tap the right box for each value. Watch out: some are traps.',
+        cats: ['int', 'double', 'char', 'text|char *', 'long long'],
+        items: [
+          { t: '~15~', a: 0 },
+          { t: '~2.75~', a: 1 },
+          { t: "~'A'~", a: 2 },
+          { t: '~"Juan"~', a: 3 },
+          { t: '~3.0~', a: 1, why: 'It has a decimal point, so it is a double, even though the value is whole.' },
+          { t: "~'7'~", a: 2, why: "Single quotes mean ONE character: '7' is the symbol 7, not the number seven." },
+          { t: 'the number of students in a section', a: 0 },
+          { t: 'the radius of a can, in cm', a: 1, why: 'Measurements can have decimals → double.' },
+          { t: 'a GWA like 1.75', a: 1, why: 'Decimals → double.' },
+          { t: 'a letter grade like B', a: 2 },
+          { t: "a student's full name", a: 3, why: 'A name is many characters → text. A char holds only one.' },
+          { t: '13! = 6,227,020,800', a: 4, why: 'An int only goes up to about 2.1 billion. Bigger whole numbers need long long.' },
+        ],
+      },
+      {
+        t: 'trace', title: 'Four boxes, four codes', code: C`
+#include <stdio.h>
+
+int main() {
+    int count = 15;
+    double radius = 2.75;
+    char grade = 'A';
+    char *name = "Juan";
+    printf("%d students\n", count);
+    printf("radius %.2f cm\n", radius);
+    printf("grade %c\n", grade);
+    printf("hello, %s!\n", name);
+    return 0;
+}
+`,
+        body: 'Watch the variable strip: each box shows its **type** in grey. Each printf uses the % code that matches that type.',
+      },
+      {
+        t: 'read', title: 'Format codes come from types', code: C`
+double price = 49.5;
+printf("%d\n", price);     // ✗ garbage
+printf("%f\n", price);     // ✓ 49.500000
+printf("%.2f\n", price);   // ✓ 49.50
+scanf("%lf", &price);      // ✓ %lf = double box
+`, anno: { 2: 'reads the double as if it were an int', 5: 'scanf must know the exact box size' },
+        body: `printf and scanf can't see your variable's type, so the ~%~ code **tells** them:
+
+| Type | printf | scanf |
+| ~int~ | ~%d~ | ~%d~ |
+| ~long long~ | ~%lld~ | ~%lld~ |
+| ~double~ | ~%f~ / ~%.2f~ | ~%lf~ |
+| ~float~ | ~%f~ | ~%f~ |
+| ~char~ | ~%c~ | ~" %c"~ |
+| text | ~%s~ | ~%s~ |
+
+**Why %lf only in scanf?** scanf writes INTO your box, so it needs the exact box size: ~%f~ is a 4-byte float, ~%lf~ an 8-byte double. printf only reads a copy, and C passes every float to it as a double, so ~%f~ works for both.`,
+      },
+      {
+        t: 'quiz', title: 'Wrong code, wrong output', q: 'What does `printf("%d", 49.5);` print?',
+        opts: ['49', '50', '49.5', 'A garbage number (like 1717986918)'], a: 3,
+        why: 'printf does not convert anything: it reads the bits of the double **as if** they were an int, and you get nonsense. A compiler warns you; on paper, nobody does. Always match the code to the type.',
+      },
+      {
+        t: 'trace', title: 'Boxes have limits', code: C`
+#include <stdio.h>
+
+int main() {
+    int big = 2147483647;
+    long long bigger = 2147483647;
+    float f = 1.20;
+    double d = 1.20;
+    big = big + 1;
+    bigger = bigger + 1;
+    printf("int + 1:       %d\n", big);
+    printf("long long + 1: %lld\n", bigger);
+    printf("float  1.20 -> %.10f\n", f);
+    printf("double 1.20 -> %.10f\n", d);
+    return 0;
+}
+`,
+        body: `Every box has a fixed size, so it has limits. Watch two of them break:
+
+- ~int~ tops out at **2,147,483,647**. Add one and it wraps around to a huge negative number, with no error at all!
+- ~float~ keeps only about 7 digits, so 1.20 is really stored as 1.2000000477. ~double~ keeps about 15.`,
+      },
+      {
+        t: 'read', title: 'Pick the right box',
+        body: `| Type | Size | Holds |
+| ~char~ | 1 byte | one character |
+| ~int~ | 4 bytes | whole numbers up to about ±2.1 billion |
+| ~long long~ | 8 bytes | whole numbers up to about ±9.2 × 10¹⁸ |
+| ~float~ | 4 bytes | decimals, about 7 digits |
+| ~double~ | 8 bytes | decimals, about 15 digits |
+
+Rules of thumb for the exam:
+
+- counting, whole numbers, N → ~int~
+- anything measured or averaged (lengths, areas, GWA, money) → ~double~
+- factorials and other huge whole numbers → ~long long~
+- one letter or symbol → ~char~; words → text (~char *~)`,
+      },
+      {
+        t: 'trace', title: 'When types mix', code: C`
+#include <stdio.h>
+
+int main() {
+    int chopped = 3.99;
+    int half = 7 / 2;
+    double real = 7.0 / 2;
+    char letter = 'A';
+    letter = letter + 1;
+    printf("%d %d %.1f %c %d\n", chopped, half, real, letter, letter);
+    return 0;
+}
+`,
+        body: `Three silent conversions that cost exam points:
+
+- Storing a decimal in an ~int~ **chops** it: 3.99 → 3 (no rounding!)
+- ~int / int~ stays an int: 7 / 2 → 3. Make one side a double: 7.0 / 2 → 3.5
+- A ~char~ is secretly a small number: 'A' is 65, so 'A' + 1 is 'B'`,
+      },
+      {
+        t: 'quiz', title: 'Chopped area', code: C`
+int area;
+area = 3.14159 * 2 * 2;
+`, q: 'What ends up in `area`?', opts: ['12.56636', '12', '13', 'Compile error'], a: 1,
+        why: '`area` is an int box, so C chops the decimal part: 12.56636 → **12**. Declare `double area;` instead. Areas, averages and measurements are always double.',
+      },
+      {
+        t: 'quiz', title: 'Words need text', q: 'Which line stores the word Juan correctly?',
+        opts: [`char name = 'Juan';`, `char name = "Juan";`, `char *name = "Juan";`, `int name = "Juan";`], a: 2,
+        why: 'A `char` holds ONE character, and single quotes are for one character only. Text (many characters) uses `char *name = "Juan";` (or a char array).',
+      },
+      {
+        t: 'fill', title: 'Match the codes', body: 'Pick the % code that matches each box.',
+        code: C`
+int students = 42;
+double gwa = 1.75;
+char section = 'B';
+char *name = "Juan";
+printf("%[[d|i]] students\n", students);
+printf("GWA: %[[.2f|f]]\n", gwa);
+printf("Section %[[c]]\n", section);
+printf("Name: %[[s]]\n", name);
+scanf("%[[lf]]", &gwa);
+`, extra: ['int', 'str', 'ch'],
+        why: 'int → `%d`, double → `%f` / `%.2f` (but `%lf` when scanf reads it), char → `%c`, text → `%s`.',
+      },
+      {
+        t: 'code', title: 'Fix the type bugs',
+        starter: C`
+#include <stdio.h>
+
+int main() {
+    int price = 49.75;
+    int count = 3;
+    char name = "Shirt";
+    printf("%d x %s = %d\n", count, name, price * count);
+    return 0;
+}
+`,
+        body: 'This receipt program has **three type bugs**. Fix them so it prints:\n\n~3 x Shirt = 149.25~\n\nRun it first and read what the compiler and the output tell you.',
+        tests: [{ input: '', nums: [3, 149.25], has: ['Shirt'] }],
+        hints: ['49.75 has decimals, so price needs a double box.', 'Text needs  char *name = "Shirt";', 'price * count is now a double, so print it with %.2f'],
+        solution: C`
+#include <stdio.h>
+
+int main() {
+    double price = 49.75;
+    int count = 3;
+    char *name = "Shirt";
+    printf("%d x %s = %.2f\n", count, name, price * count);
+    return 0;
+}
+`,
+      },
+    ],
+  },
+  {
+    id: 'vars', unit: 0, title: 'Named Boxes', sub: 'declare, =, initialize vs process', icon: '▣',
+    steps: [
+      {
+        t: 'read', title: 'Boxes, now with names', code: C`
+int count;           // declare: an int box named count
+count = 15;          // assign: put 15 inside
+double r = 2.5;      // declare + first value in one line
+`, anno: { 1: 'type, then name', 2: '= stores a value', 3: 'initialization' },
+        body: `You know the box **types**. Now let's use the boxes:
+
+- **Declare** each box once: its type, then its name.
+- **Assign** with ~=~: put a value inside, replacing the old one.
+- Declare **before** you use it: on paper and in C.`,
       },
       {
         t: 'read', title: 'Hexagon vs rectangle', flow: true, code: BOXES,
@@ -479,7 +674,9 @@ scanf("%d", n);
       },
       {
         t: 'read', title: 'The %lf rule',
-        body: `| Type | scanf | printf |
+        body: `Remember from Data Types: scanf writes **into** your box, so it needs the box's exact size. That's why a double is read with ~%lf~ but printed with ~%f~.
+
+| Type | scanf | printf |
 | ~int~ | ~%d~ | ~%d~ |
 | ~double~ | ~%lf~ | ~%f~ or ~%.2f~ |
 | ~float~ | ~%f~ | ~%f~ |
