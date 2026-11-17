@@ -10,7 +10,7 @@ export type Step =
   | { t: 'code'; title: string; body: string; starter: string; tests: import('../lib/grade').TestCase[]; hints: string[]; solution: string; blueprint?: boolean; paper?: boolean }
   | { t: 'shape'; title: string; body: string; shape: string };
 
-export interface Lesson { id: string; unit: number; title: string; sub: string; icon: string; boss?: boolean; steps: Step[] }
+export interface Lesson { id: string; unit: number; title: string; sub: string; icon: string; boss?: boolean; mini?: boolean; steps: Step[] }
 export interface Unit { n: number; title: string; tag: string; color: string }
 
 export interface Challenge {

@@ -147,7 +147,22 @@ if (n <= 15 || n % 3 != 0) {          // INVALID condition
     body: 'Flip a valid condition into an error condition: negate each part and swap ~&&~ ↔ ~||~. Valid ~n > 15 && n % 3 == 0~ → invalid ~n <= 15 || n % 3 != 0~.',
   },
   {
-    id: 'errors', title: 'Top 10 mistakes', icon: '✗',
+    id: 'text', title: 'Text in variables (strings)', icon: '"s"',
+    code: C`
+char *honor;                    // points to text
+honor = "Cum Laude";            // OK
+printf("Honor: %s\n", honor);   // print text with %s
+
+char name[30];                  // array of chars
+scanf("%s", name);              // one word, no & for arrays
+strcpy(name, "Juan");           // copy text in (<string.h>)
+`,
+    body: `~char x;~ holds ONE character. Arrays can't be assigned with ~=~: use ~char *~ or ~strcpy~. Compare text with ~strcmp(a, b) == 0~, never ~a == b~.
+
+> GWA-type boundaries (1.20, 1.45, 1.75): use **double**, not float.`,
+  },
+  {
+    id: 'errors', title: 'Top mistakes', icon: '✗',
     body: `1. Missing ~;~ at the end of a statement
 2. ~if (x = 5)~ instead of ~if (x == 5)~
 3. ~scanf("%d", n)~ — missing ~&~
@@ -157,7 +172,9 @@ if (n <= 15 || n % 3 != 0) {          // INVALID condition
 7. ~sum~ not initialized to 0 (garbage!)
 8. Loop never changes its variable → infinite loop
 9. ~;~ right after ~while (…)~ or ~for (…)~
-10. Missing ~#include <math.h>~ for sqrt/pow`,
+10. Missing ~#include <math.h>~ for sqrt/pow
+11. ~char honor;~ for text (use ~char *honor;~)
+12. ~float~ for boundary checks like ~gwa <= 1.20~ (use ~double~)`,
   },
 ];
 
@@ -208,4 +225,8 @@ export const CARDS: Card[] = [
   { id: 'c43', f: 'Euclid GCD loop', b: '`while (b != 0) { r = a % b; a = b; b = r; }` → a is the GCD' },
   { id: 'c44', f: 'Track the maximum while reading values', b: '`if (x > max) max = x;` (max starts at the first value)' },
   { id: 'c45', f: 'Average of int total over n, as a decimal', b: '`(double) total / n`' },
+  { id: 'c46', f: 'Store the text "Cum Laude" in a variable', b: '`char *honor = "Cum Laude";` and print it with `%s`' },
+  { id: 'c47', f: 'Why does `char h[30]; h = "Summa";` fail?', b: 'Arrays can\'t be assigned with `=`. Use `strcpy(h, "Summa");` or declare `char *h;`' },
+  { id: 'c48', f: 'GWA ladder with ≤ checks: which bound goes first?', b: 'The smallest: 1.20 → 1.45 → 1.75. Otherwise everyone stops at the widest check.' },
+  { id: 'c49', f: 'Why use double, not float, for a GWA of 1.20?', b: 'float stores 1.2000000477, so `gwa <= 1.20` is false. A double matches the 1.20 in your code.' },
 ];

@@ -145,7 +145,10 @@ class Machine {
     } else if (!v.init) val = '?';
     else {
       const x = v.data[0];
-      val = x instanceof Ptr ? `→ ${x.owner ? x.owner.name : '?'}${x.owner?.isArr ? `[${x.idx}]` : ''}` : (v.p > 0 ? 'NULL' : fmtNum(x, v.b));
+      if (x instanceof Ptr && v.b === 'char' && v.p === 1) {
+        let s = ''; for (let i = x.idx; i < x.data.length && x.data[i] !== 0 && s.length < 32; i++) s += String.fromCharCode(x.data[i] & 255);
+        val = JSON.stringify(s);
+      } else val = x instanceof Ptr ? `→ ${x.owner ? x.owner.name : '?'}${x.owner?.isArr ? `[${x.idx}]` : ''}` : (v.p > 0 ? 'NULL' : fmtNum(x, v.b));
     }
     return { name: v.name, type, val };
   }

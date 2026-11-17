@@ -321,7 +321,7 @@ class Parser {
   parsePrimary(): N {
     const c = this.cur;
     switch (c.k) {
-      case 'num': this.i++; return this.fin(this.mk('num', c, { v: c.n, isF: c.f, fl: c.fl, mac: c.mac, raw: c.v }));
+      case 'num': this.i++; return this.fin(this.mk('num', c, { v: c.fl ? Math.fround(c.n!) : c.n, isF: c.f, fl: c.fl, mac: c.mac, raw: c.v }));
       case 'char': this.i++; return this.fin(this.mk('num', c, { v: c.n, isChar: true, raw: c.v }));
       case 'str': { this.i++; let v = c.v; while (this.cur.k === 'str') { v += this.cur.v; this.i++; } return this.fin(this.mk('str', c, { v })); }
       case 'id': this.i++; return this.fin(this.mk('id', c, { name: c.v }));

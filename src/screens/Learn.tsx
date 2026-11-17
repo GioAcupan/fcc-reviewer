@@ -15,11 +15,13 @@ import { compile } from '../engine/interp';
 import { buildFlow } from '../engine/flow';
 import { gradeAll, TestResult } from '../lib/grade';
 import { hlLine } from '../lib/highlight';
+import { resumeTarget } from '../lib/resume';
 
 // ───────────── course map ─────────────
 export function CourseMap() {
   const p = useProgress();
-  const nextId = LESSONS.find(l => !p.lessons[l.id]?.done)?.id;
+  const target = resumeTarget(p);
+  const nextId = target.lesson.id;
   let k = 0;
   return (
     <div className="page map">
@@ -31,13 +33,21 @@ export function CourseMap() {
             {LESSONS.filter(l => l.unit === u.n).map(l => {
               const st = p.lessons[l.id];
               const prog = st?.done ? 1 : (st?.step ?? 0) / l.steps.length;
-              const off = Math.sin(k++ * 1.1) * 26;
+              const off = (Math.sin(k++ * 1.1) + 1) * 11;
               return (
-                <button key={l.id} className={`node ${st?.done ? 'done' : ''} ${l.id === nextId ? 'next' : ''} ${l.boss ? 'boss' : ''}`} style={{ ['--off' as any]: `${off}%` }} onClick={() => go('/learn/' + l.id)}>
-                  <Ring value={prog} size={l.boss ? 78 : 66} stroke={4} color={st?.done ? 'var(--ok)' : u.color}>
+                <button key={l.id} className={`node ${st?.done ? 'done' : ''} ${l.id === nextId ? 'next' : ''} ${l.boss ? 'boss' : ''} ${l.mini ? 'mini' : ''}`} style={{ ['--off' as any]: `${off}%` }} onClick={() => go('/learn/' + l.id)}>
+                  <Ring value={prog} size={l.boss ? 78 : l.mini ? 72 : 66} stroke={4} color={st?.done ? 'var(--ok)' : u.color}>
                     <span className="node-ic">{st?.done ? '✓' : l.icon}</span>
                   </Ring>
-                  <span className="node-t"><b>{l.title}</b><span>{l.sub}</span>{l.id === nextId && <em className="next-tag">next up</em>}</span>
+                  <span className="node-t"><b>{l.title}</b><span>{l.sub}</span>
+                    {(l.id === nextId || l.boss || l.mini) && (
+                      <span className="node-tags">
+                        {l.boss && <em className="boss-tag">boss</em>}
+                        {l.mini && <em className="boss-tag">mini-boss</em>}
+                        {l.id === nextId && <em className="next-tag">{target.tag}</em>}
+                      </span>
+                    )}
+                  </span>
                 </button>
               );
             })}

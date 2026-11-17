@@ -204,6 +204,90 @@ int main() {
 }
 `;
 
+// Workbook Problem 6 — PLM Academic Honors (GWA) classifier
+export const P6 = C`
+#include <stdio.h>
+
+int main() {
+    double gwa, lowest;
+    char *honor;
+    printf("Enter GWA and lowest grade: ");
+    scanf("%lf %lf", &gwa, &lowest);
+    if (lowest > 2.50) {
+        printf("Disqualified from Academic Honors (Grade below 2.50)\n");
+    } else {
+        if (gwa <= 1.20) {
+            honor = "Summa Cum Laude";
+        } else if (gwa <= 1.45) {
+            honor = "Magna Cum Laude";
+        } else if (gwa <= 1.75) {
+            honor = "Cum Laude";
+        } else {
+            honor = "No Academic Honors";
+        }
+        printf("Academic Honor: %s\n", honor);
+    }
+    return 0;
+}
+`;
+const P6_CHECKED = C`
+#include <stdio.h>
+
+int main() {
+    double gwa, lowest;
+    char *honor;
+    printf("Enter GWA and lowest grade: ");
+    scanf("%lf %lf", &gwa, &lowest);
+    if (gwa < 1.00 || gwa > 5.00) {
+        printf("Invalid GWA\n");
+    } else if (lowest > 2.50) {
+        printf("Disqualified from Academic Honors (Grade below 2.50)\n");
+    } else {
+        if (gwa <= 1.20) honor = "Summa Cum Laude";
+        else if (gwa <= 1.45) honor = "Magna Cum Laude";
+        else if (gwa <= 1.75) honor = "Cum Laude";
+        else honor = "No Academic Honors";
+        printf("Academic Honor: %s\n", honor);
+    }
+    return 0;
+}
+`;
+const GWA_CALC = C`
+#include <stdio.h>
+
+int main() {
+    int n, i;
+    double grade, units, sumGU = 0, sumU = 0, worst = 0, gwa;
+    char *honor;
+    printf("Number of subjects: ");
+    scanf("%d", &n);
+    for (i = 1; i <= n; i++) {
+        printf("Grade and units of subject %d: ", i);
+        scanf("%lf %lf", &grade, &units);
+        sumGU = sumGU + grade * units;
+        sumU = sumU + units;
+        if (grade > worst) worst = grade;
+    }
+    gwa = sumGU / sumU;
+    printf("GWA = %.2f\n", gwa);
+    if (worst > 2.50) {
+        printf("Disqualified from Academic Honors (Grade below 2.50)\n");
+    } else {
+        if (gwa <= 1.20) honor = "Summa Cum Laude";
+        else if (gwa <= 1.45) honor = "Magna Cum Laude";
+        else if (gwa <= 1.75) honor = "Cum Laude";
+        else honor = "No Academic Honors";
+        printf("Academic Honor: %s\n", honor);
+    }
+    return 0;
+}
+`;
+const SUMMA = { has: ['Summa Cum Laude'], not: ['Magna', 'No Academic', 'Disqualified', 'Invalid'] };
+const MAGNA = { has: ['Magna Cum Laude'], not: ['Summa', 'No Academic', 'Disqualified', 'Invalid'] };
+const CUM = { has: ['Cum Laude'], not: ['Summa', 'Magna', 'No Academic', 'Disqualified', 'Invalid'] };
+const NONE = { has: ['No Academic Honors'], not: ['Cum Laude', 'Disqualified', 'Invalid'] };
+const DISQ = { has: ['Disqualified'], not: ['Cum Laude', 'No Academic', 'Invalid'] };
+
 export const LESSONS: Lesson[] = [
   // ───────────────────────── UNIT 0 ─────────────────────────
   {
@@ -715,6 +799,103 @@ int main() {
       },
     ],
   },
+  {
+    id: 'gwa', unit: 2, mini: true, title: 'Mini-Boss: Latin Honors (GWA)', sub: 'Workbook Problem 6 — guard + ladder + text', icon: '♛',
+    steps: [
+      {
+        t: 'read', title: 'Workbook Problem 6, in C', flow: true, code: P6,
+        anno: { 5: 'a variable that holds TEXT', 8: 'GUARD: the disqualification diamond', 11: 'LADDER: strictest bound first', 20: 'display once, after the ladder' },
+        body: `Problem 6 checks PLM Latin honors. It is made of two things you already know:
+
+**Guard**: if any grade is worse than 2.50, the student is disqualified.
+**Ladder**: three diamonds pick the honor from the GWA.
+
+> PLM grades run **backwards**: 1.00 is the best and 5.00 is failing. So "GWA ≤ 1.20" is the TOP range, and the "lowest grade" is the numerically **biggest** one (like a 2.75).`,
+      },
+      { t: 'trace', title: 'Run it: GWA 1.32', code: P6, stdin: '1.32 2.25', body: 'GWA 1.32, worst subject 2.25. Not disqualified → fails ≤ 1.20 → passes ≤ 1.45 → **Magna Cum Laude**. Watch `honor` turn into text.' },
+      {
+        t: 'quiz', title: 'Order matters', code: C`
+if (gwa <= 1.75) honor = "Cum Laude";
+else if (gwa <= 1.45) honor = "Magna Cum Laude";
+else if (gwa <= 1.20) honor = "Summa Cum Laude";
+`, q: 'Someone wrote the ladder in this order. A student with GWA **1.10** gets…', opts: ['Summa Cum Laude', 'Cum Laude', 'Magna Cum Laude', 'No honors'], a: 1,
+        why: '1.10 ≤ 1.75 is already true at the FIRST diamond, so the ladder stops there. With ≤ ladders, test the **smallest** bound first: 1.20 → 1.45 → 1.75.',
+      },
+      {
+        t: 'quiz', title: 'Boundary check', q: 'A student\'s lowest grade is exactly **2.50**. Are they disqualified?',
+        opts: ['Yes, 2.50 is too low', 'No: the rule is > 2.50, and 2.50 > 2.50 is false', 'Only if their GWA is above 1.75', 'It depends on the units'], a: 1,
+        why: 'The diamond asks "Is LowestGrade > 2.50?". For exactly 2.50 the answer is **No**, so they continue to the ladder. Exams (and test cases) love boundary values: 1.20, 1.45, 1.75 and 2.50 all matter.',
+      },
+      {
+        t: 'read', title: 'Text in a variable', code: C`
+char honor;                 // ✗ holds ONE character
+char honor[30];
+honor = "Cum Laude";        // ✗ arrays can't be assigned with =
+
+char *honor;                // ✓ points to text
+honor = "Cum Laude";        // ✓
+printf("%s\n", honor);      // %s prints text
+`, anno: { 1: 'one letter only', 3: 'compile error', 5: 'the easy way' },
+        body: `The flowchart says ~Honor = "Summa Cum Laude"~. That's easy on paper, but C is picky about text:
+
+- ~char honor;~ holds a single character, not a word.
+- An array like ~char honor[30];~ can't be assigned with ~=~ (you'd need ~strcpy~ from ~<string.h>~).
+- Easiest: ~char *honor;~, then ~honor = "...";~, and print it with ~%s~.
+
+> Also fine on paper: skip the variable and ~printf~ the honor inside each branch.`,
+      },
+      {
+        t: 'quiz', title: 'The float trap', code: C`
+float gwa;
+scanf("%f", &gwa);        // user types 1.20
+if (gwa <= 1.20) printf("Summa");
+else printf("Magna");
+`, q: 'The user types exactly **1.20**. What prints?', opts: ['Summa', 'Magna', 'Nothing', 'Error'], a: 1,
+        why: 'A `float` cannot store 1.20 exactly. It holds 1.2000000477, while the `1.20` written in the code is a more precise `double` (1.19999999…). So 1.2000000477 ≤ 1.2 is **false** → Magna! Use `double` with `%lf` and the boundary works. (Try it in the Playground.)',
+      },
+      {
+        t: 'fill', title: 'Build the ladder', body: 'Complete the guard, the ladder, and the final display.',
+        code: C`
+if (lowest [[>]] 2.50) {
+    printf("Disqualified\n");
+} else {
+    if (gwa [[<=]] 1.20) {
+        honor = "Summa Cum Laude";
+    } [[else if]] (gwa <= 1.45) {
+        honor = "Magna Cum Laude";
+    } else if (gwa <= [[1.75]]) {
+        honor = "Cum Laude";
+    } [[else]] {
+        honor = "No Academic Honors";
+    }
+    printf("Academic Honor: [[%s]]\n", honor);
+}
+`, extra: ['>=', '<', '1.45', 'if', '%c', '%d'],
+        why: 'Disqualified only when the lowest grade is **above** 2.50 (`>`), the ladder uses `<=` with the smallest bound first, and text prints with `%s`.',
+      },
+      {
+        t: 'code', title: 'Problem 6, from the flowchart', blueprint: true, starter: STARTER,
+        body: 'Use the blueprint flowchart. Input the **GWA** and the **lowest grade** (decimals). If the lowest grade is above 2.50, display a disqualification message. Otherwise display ~Academic Honor:~ followed by **Summa Cum Laude** (≤ 1.20), **Magna Cum Laude** (≤ 1.45), **Cum Laude** (≤ 1.75) or **No Academic Honors**.\n\nThe hidden tests include the exact boundaries 1.20, 1.45, 1.75 and 2.50.',
+        tests: [
+          { input: '1.10 1.75\n', ...SUMMA }, { input: '1.20 2.00\n', ...SUMMA }, { input: '1.45 2.50\n', ...MAGNA },
+          { input: '1.60 2.25\n', ...CUM }, { input: '1.75 1.50\n', ...CUM }, { input: '1.90 2.00\n', ...NONE }, { input: '1.15 2.75\n', ...DISQ },
+        ],
+        hints: ['double gwa, lowest;  then  scanf("%lf %lf", &gwa, &lowest);  (double, not float!)', 'Guard first: if (lowest > 2.50) { ... } else { the ladder }', 'char *honor;  then  honor = "Summa Cum Laude";  and print with  printf("Academic Honor: %s\\n", honor);'],
+        solution: P6,
+      },
+      {
+        t: 'code', title: 'Paper mode: add input checks', paper: true, starter: '',
+        body: 'Same Problem 6, now protected: if the GWA is **not between 1.00 and 5.00** (inclusive), display ~Invalid GWA~ and stop. Otherwise do the disqualification check and the honors ladder as before.\n\nPaper mode: no Run button, no colors.',
+        tests: [
+          { input: '0.90 1.50\n', has: ['Invalid'], not: ['Cum Laude', 'No Academic', 'Disqualified'] },
+          { input: '5.25 3.00\n', has: ['Invalid'], not: ['Cum Laude', 'No Academic', 'Disqualified'] },
+          { input: '1.00 1.00\n', ...SUMMA }, { input: '1.30 2.00\n', ...MAGNA }, { input: '1.50 3.00\n', ...DISQ }, { input: '1.80 2.50\n', ...NONE },
+        ],
+        hints: ['Invalid when: gwa < 1.00 || gwa > 5.00', 'Chain the checks: if (invalid) { ... } else if (lowest > 2.50) { ... } else { ladder }'],
+        solution: P6_CHECKED,
+      },
+    ],
+  },
   // ───────────────────────── UNIT 3 ─────────────────────────
   {
     id: 'while', unit: 3, title: 'Loops: while', sub: 'the arrow that goes back up', icon: '↻',
@@ -1151,12 +1332,26 @@ int main() {
 `,
       },
       {
+        t: 'code', title: 'Exam Q3: GWA from scratch', paper: true, starter: '',
+        body: 'The harder GWA question. Input **N** (number of subjects), then the **grade and units** of each subject. Compute the GWA = Σ(grade × units) ÷ Σ(units) and display it with 2 decimals. Then apply the Problem 6 rules: if any grade is above 2.50 display the disqualification; otherwise display ~Academic Honor:~ with Summa (≤ 1.20), Magna (≤ 1.45), Cum Laude (≤ 1.75) or No Academic Honors.',
+        tests: [
+          { input: '3\n1.25 3\n1.00 3\n1.50 2\n', nums: [1.22], ...MAGNA },
+          { input: '2\n1.00 3\n1.25 2\n', nums: [1.1], ...SUMMA },
+          { input: '3\n1.50 3\n1.75 3\n1.75 2\n', nums: [1.66], ...CUM },
+          { input: '2\n2.25 3\n2.00 2\n', nums: [2.15], ...NONE },
+          { input: '4\n1.75 3\n2.00 3\n1.50 3\n2.75 1\n', nums: [1.85], ...DISQ },
+        ],
+        hints: ['Two accumulators in a for loop:  sumGU = sumGU + grade * units;  sumU = sumU + units;', 'Track the worst grade: start worst = 0, then  if (grade > worst) worst = grade;', 'After the loop:  gwa = sumGU / sumU;  then reuse the Problem 6 guard + ladder with worst.'],
+        solution: GWA_CALC,
+      },
+      {
         t: 'read', title: 'You are exam-ready',
         body: `You can now:
 
 - translate any flowchart symbol into C and back
 - derive a surface-area formula with the Face Method
 - write the guard + accumulate program on demand
+- classify Latin honors, even from a GWA you compute yourself
 
 Keep the streak alive: the **Challenges** tab has 30 levels for general fluency, and the **Reference** tab has flashcards for the bus ride. Good luck on the finals!`,
       },

@@ -2,9 +2,9 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 import { BookOpen, Code2, Home as HomeIcon, Swords, Terminal } from 'lucide-react';
 import { useRoute, go } from './lib/router';
-import { useProgress, Progress } from './lib/store';
+import { useProgress } from './lib/store';
+import { resumeTarget } from './lib/resume';
 import { LESSONS } from './content/lessons';
-import type { Lesson } from './content/types';
 import { CHALLENGES } from './content/challenges';
 import { CourseMap, LessonPlayer } from './screens/Learn';
 import { LevelSelect, ChallengePlay } from './screens/Challenges';
@@ -49,17 +49,6 @@ function Typer() {
       <div className={`hero-out ${done ? 'show' : ''}`}><span className="mut">$ ./main</span><br />Exam? EZ.</div>
     </div>
   );
-}
-
-// Home card target: the lesson you last opened (if unfinished), else the next unfinished one after it.
-function resumeTarget(p: Progress): { lesson: Lesson; label: string } {
-  const unfinished = (l: Lesson) => !p.lessons[l.id]?.done;
-  const last = LESSONS.find(l => l.id === p.lastLesson);
-  if (last && unfinished(last)) return { lesson: last, label: 'continue →' };
-  const nxt = LESSONS.slice(last ? LESSONS.indexOf(last) + 1 : 0).find(unfinished) ?? LESSONS.find(unfinished);
-  if (!nxt) return { lesson: last ?? LESSONS[LESSONS.length - 1], label: 'review →' };
-  if ((p.lessons[nxt.id]?.step ?? 0) > 0) return { lesson: nxt, label: 'continue →' };
-  return { lesson: nxt, label: last || Object.keys(p.lessons).length ? 'up next →' : 'start here →' };
 }
 
 function Home() {

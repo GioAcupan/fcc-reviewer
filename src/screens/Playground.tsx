@@ -8,7 +8,7 @@ import { compile } from '../engine/interp';
 import { buildFlow, Flow } from '../engine/flow';
 import { getProgress, update } from '../lib/store';
 import { C } from '../content/types';
-import { P11 } from '../content/lessons';
+import { P11, P6 } from '../content/lessons';
 
 const EXAMPLES: { name: string; code: string }[] = [
   { name: 'Hello', code: C`
@@ -52,6 +52,7 @@ int main() {
     return 0;
 }
 ` },
+  { name: 'GWA honors (Problem 6)', code: P6 },
   { name: 'Grade ladder', code: C`
 #include <stdio.h>
 

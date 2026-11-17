@@ -160,10 +160,10 @@ export function check(prog: Program): Diag[] {
       case 'assign': {
         const l = T(e.l); const r = T(e.r);
         if (!isLval(e.l)) err(e, 'lvalue required as left operand of assignment', 'The LEFT side of = must be a variable: area = l * w;  (math style  l * w = area  does not work in C)');
-        else if (l.a > 0) err(e, `assignment to expression with array type`, 'You cannot assign a whole array/string at once. Assign elements one by one, or use strcpy() for strings.');
+        else if (l.a > 0) err(e, `assignment to expression with array type`, 'Arrays can\'t be assigned with =. For text, declare  char *name;  instead, or copy with  strcpy(name, "...");  from <string.h>.');
         if (e.op === '%=' && (isFloat(l) || isFloat(r))) err(e, 'invalid operands to %=', '% only works with integers.');
         if (isFloat(l)) warnIntDiv(e.r);
-        if (isIntTy(l) && !isPtr(r) && e.r.k === 'str') err(e, `assigning a string to '${nm(e.l)}' which is a ${tyStr(l)}`, 'Strings need a char array, e.g. char name[20];');
+        if (isIntTy(l) && e.r.k === 'str') err(e, `'${nm(e.l)}' is a single ${tyStr(l)} — it can't hold a "string"`, `A ${tyStr(l)} holds ONE value. For text declare  char *${nm(e.l)};  then  ${nm(e.l)} = "...";  (or use a char array + strcpy).`);
         return l;
       }
       case 'cond': { T(e.c); const a = T(e.t), b = T(e.f); return isPtr(a) ? a : isPtr(b) ? b : arith(a, b); }
